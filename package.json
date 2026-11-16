@@ -1,5 +1,5 @@
 {
-  "name": "lintstyle",
+  "name": "@newzogwosh/lintstyle",
   "version": "0.1.0",
   "description": "Opinionated ESLint flat config: hand-written layers (base / typescript / typed / stylistic / imports / node / browser) plus custom lintstyle rules",
   "license": "MIT",
