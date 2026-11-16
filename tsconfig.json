@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  // files 与 include 并用：TypeScript 的 include 会静默丢弃根目录的 .d.ts
+  // （project service 同样找不到），只能用 files 显式收录
+  "files": ["index.d.ts"],
+  "include": ["configs/**/*.ts", "eslint.config.ts", "index.ts"]
+}
