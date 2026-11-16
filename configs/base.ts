@@ -22,7 +22,27 @@ export const base = {
         message: '禁止对象解构赋值，请使用点号（obj.a）显式访问属性。',
       },
       {
-        selector: 'ArrayPattern',
+        // 禁止数组解构赋值，请使用下标（arr[0]）显式访问元素。
+        // 唯一豁免：SolidJS 响应式原语的元组解构（const [get, set] = createSignal(...)）——
+        // eslint-plugin-solid 的 reactivity 规则要求以数组解构捕获
+        // createSignal / createStore 的返回值才能做正确的响应式分析，
+        // 两条规则在此直接冲突；响应用法优先，仅此场景放行。
+        // 实现说明：主体节点必须是 VariableDeclarator（:not 无法跨节点回溯父级），
+        // 链式单参 :not 做排除（esquery 的 :not 不接受多选择器参数）。
+        selector:
+          "VariableDeclarator[id=ArrayPattern]:not([init.callee.name='createSignal']):not([init.callee.name='createStore'])",
+        message: '禁止数组解构赋值，请使用下标（arr[0]）显式访问元素。',
+      },
+      {
+        // 函数参数位置的数组解构（与上条互补：声明位置已由 VariableDeclarator 主体覆盖）
+        selector:
+          ':matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression) > ArrayPattern',
+        message: '禁止数组解构赋值，请使用下标（arr[0]）显式访问元素。',
+      },
+      {
+        // 赋值与 for-of 位置的数组解构
+        selector:
+          ':matches(AssignmentExpression, ForOfStatement, ForInStatement) > ArrayPattern',
         message: '禁止数组解构赋值，请使用下标（arr[0]）显式访问元素。',
       },
       // 禁用三元表达式，改用 if/else 显式分支
