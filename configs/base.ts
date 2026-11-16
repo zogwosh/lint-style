@@ -55,6 +55,35 @@ export const base = {
         selector: "BinaryExpression[operator='instanceof']",
         message: '禁止使用 instanceof，请使用类型守卫（x is T）或显式特征检查。',
       },
+      // typeof 判断 'object' 不可靠：typeof null 也是 'object'，数组同样放行。
+      // 判空用 x === null / x !== null，对象收窄用类型守卫（x is T）
+      {
+        selector:
+          "BinaryExpression[operator=/===|!==/][left.type='UnaryExpression'][left.operator='typeof'][right.value='object']",
+        message:
+          '禁止用 typeof 判断 object（typeof null 也是 object），判空请用 x === null / x !== null，收窄请用类型守卫（x is T）。',
+      },
+      // 镜像写法：'object' === typeof x
+      {
+        selector:
+          "BinaryExpression[operator=/===|!==/][right.type='UnaryExpression'][right.operator='typeof'][left.value='object']",
+        message:
+          '禁止用 typeof 判断 object（typeof null 也是 object），判空请用 x === null / x !== null，收窄请用类型守卫（x is T）。',
+      },
+      // typeof 判断 undefined 是 ES5 时代的防御式写法（防未声明变量）：
+      // ESM/TS 下 x === undefined 对包括 unknown 在内的一切类型都成立，
+      // 判空统一走显式 === / !==（白名单之外的写法封禁见 no-restricted-syntax 各条）
+      {
+        selector:
+          "BinaryExpression[operator=/===|!==/][left.type='UnaryExpression'][left.operator='typeof'][right.value='undefined']",
+        message: '禁止用 typeof 判断 undefined，请直接写 x === undefined。',
+      },
+      // 镜像写法：'undefined' === typeof x
+      {
+        selector:
+          "BinaryExpression[operator=/===|!==/][right.type='UnaryExpression'][right.operator='typeof'][left.value='undefined']",
+        message: '禁止用 typeof 判断 undefined，请直接写 x === undefined。',
+      },
       // 禁用 for...in（会遍历原型链上的可枚举属性且键为 string），改用 Object.keys / Object.entries
       {
         selector: 'ForInStatement',
@@ -241,6 +270,16 @@ export const base = {
       {
         selector: "BinaryExpression[operator='in']",
         message: '禁止 in 操作符（沿原型链探测），自身属性用 Object.hasOwn()，集合用 Map.has() / includes()。',
+      },
+      // 全局 isNaN / isFinite 判断前会先做隐式 Number() 转换
+      // （isNaN('12px') === false），数字判断必须走不做转换的
+      // Number.isNaN / Number.isFinite。不用 no-restricted-globals 的原因：
+      // browser / node 层各自重定义了该规则会整体覆盖 base 配置。
+      // :not 排除成员访问位置（Number.isNaN）与属性键等普通标识符
+      {
+        selector:
+          'Identifier[name=/^(isNaN|isFinite)$/]:not(MemberExpression > Identifier, Property > Identifier, TSPropertySignature > Identifier, MethodDefinition > Identifier, PropertyDefinition > Identifier)',
+        message: '禁止使用全局 isNaN / isFinite（会先隐式 Number() 转换），请使用 Number.isNaN / Number.isFinite。',
       },
       // 动态正则是注入与 ReDoS 温床，强制正则字面量
       {
